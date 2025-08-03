@@ -61,58 +61,87 @@ def extraire_groupe_chenin(nom):
     # groupes = chenin_1_percent_pondered.index.to_series().apply(extraire_groupe) # .replace("BPacBio", "B")
 
 
-def levenshtein_kmer_selection(list_kmer, gc_percentage=None, len_kmer=21, p_value=0.05):
-    # eco_mode = True
+def levenshtein_select(list_kmer, atcg_per, len_kmer=21, p_value=0.05):
     """
-    Function to select kmer based on composition.
-    :param list_kmer: list of kmers
-    :param gc_percentage: float - percentage of GC found in the genome, if None, proportion is calculated on given genome. Info: Chenin: 27.1
-    :param len_kmer: int - length of kmers to be found in data
-    :param p_value: float - threshold for rejection of H0 hypothesis (rejecting independence), higher value = less kmers selected
-    # :param eco_mode: boolean - parameter to limit the number of dictionary and data gathered to keep it straight for the expected result, use False for debugging
-    :return: list of selected kmers only if eco_mode = True, lists of selected and unselected kmers, dictionary of overall bases and kmer bases
+        Function to select kmer based on given genome ATCG composition.
+        :param list_kmer: List of kmers
+        :param atcg_per: dict of float - percentage of ATCG found in the genome
+        :param len_kmer: int - length of kmers to be found in data
+        :param p_value: float - threshold for rejection of H0 hypothesis (rejecting independence), higher value = less kmers selected
+        # :param eco_mode: boolean - parameter to limit the number of dictionary and data gathered to keep it straight for the expected result, use False for debugging
+        :return: list of selected kmers only if eco_mode = True, lists of selected and unselected kmers, dictionary of overall bases and kmer bases
     """
-    #Chenin: https://trace.ncbi.nlm.nih.gov/Traces/?view=run_browser&page_size=10&acc=SRR11574165&display=metadata
-
-    if not gc_percentage:
-        list_all_bases = [i for x in list_kmer for i in x]
-        len_list_all_bases = len(list_all_bases)
-        dict_kmer_base = {'c': list_all_bases.count('C'),
-                          'g': list_all_bases.count('G'),
-                          't': list_all_bases.count('T'),
-                          'a': list_all_bases.count('A'),
-                          'c_proportion': list_all_bases.count('C') / len_list_all_bases,
-                          'g_proportion': list_all_bases.count('G') / len_list_all_bases,
-                          't_proportion': list_all_bases.count('T') / len_list_all_bases,
-                          'a_proportion': list_all_bases.count('A') / len_list_all_bases}
-        g_expected = dict_kmer_base['g_proportion'] * len_kmer
-        c_expected = dict_kmer_base['c_proportion'] * len_kmer
-        t_expected = dict_kmer_base['t_proportion'] * len_kmer
-        a_expected = dict_kmer_base['a_proportion'] * len_kmer
-        print("G expected by kmer (calculated from kmer) :", g_expected)
-        print("C expected by kmer (calculated from kmer) :", c_expected)
-        print("T expected by kmer (calculated from kmer) :", t_expected)
-        print("A expected by kmer (calculated from kmer) :", a_expected)
-    else:
-        g_expected = c_expected = gc_percentage * len_kmer / 100 / 2
-        t_expected = a_expected = (len_kmer - (g_expected + c_expected)) / 2
-        print("G expected by kmer (from given value) :", g_expected)
-        print("C expected by kmer (from given value) :", c_expected)
-        print("T expected by kmer (from given value) :", t_expected)
-        print("A expected by kmer (from given value) :", a_expected)
-    #--- ECO MODE ---
-    # if eco_mode: #memory economic calculation
     list_selected_kmer = []
     for kmer in list_kmer:
         g_obs = kmer.count('G')
         c_obs = kmer.count('C')
         t_obs = kmer.count('T')
         a_obs = kmer.count('A')
-        #performe chi² test between numbers of bases inside kmer and expected number based on genome information provided
-        chi = chisquare([g_obs, c_obs, t_obs, a_obs], f_exp=[g_expected, c_expected, t_expected, a_expected])
-        if chi.pvalue > p_value: # take those who are dependent and do not respect H0 hypothesis
+        g_expected = atcg_per["g"] * len_kmer / 100
+        c_expected = atcg_per["c"] * len_kmer / 100
+        t_expected = atcg_per["t"] * len_kmer / 100
+        a_expected = atcg_per["a"] * len_kmer / 100
+        # performe chi² test between numbers of bases inside kmer and expected number based on genome information provided
+        if chisquare([g_obs, c_obs, t_obs, a_obs], f_exp=[g_expected, c_expected, t_expected,
+                                                          a_expected]).pvalue > p_value:  # take those who are dependent and do not respect H0 hypothesis
+            list_selected_kmer.append(kmer)
+        elif chisquare([c_obs, g_obs, a_obs, t_obs], f_exp=[g_expected, c_expected, t_expected,
+                                                            a_expected]).pvalue > p_value:  # changing C in G and T in A:
             list_selected_kmer.append(kmer)
     return list_selected_kmer
+
+# def levenshtein_kmer_selection(list_kmer, gc_percentage=None, len_kmer=21, p_value=0.05):
+#     # eco_mode = True
+#     """
+#     Function to select kmer based on composition.
+#     :param list_kmer: list of kmers
+#     :param gc_percentage: float - percentage of GC found in the genome, if None, proportion is calculated on given genome. Info: Chenin: 27.1
+#     :param len_kmer: int - length of kmers to be found in data
+#     :param p_value: float - threshold for rejection of H0 hypothesis (rejecting independence), higher value = less kmers selected
+#     # :param eco_mode: boolean - parameter to limit the number of dictionary and data gathered to keep it straight for the expected result, use False for debugging
+#     :return: list of selected kmers only if eco_mode = True, lists of selected and unselected kmers, dictionary of overall bases and kmer bases
+#     """
+#     #Chenin: https://trace.ncbi.nlm.nih.gov/Traces/?view=run_browser&page_size=10&acc=SRR11574165&display=metadata
+#
+#     if not gc_percentage:
+#         list_all_bases = [i for x in list_kmer for i in x]
+#         len_list_all_bases = len(list_all_bases)
+#         dict_kmer_base = {'c': list_all_bases.count('C'),
+#                           'g': list_all_bases.count('G'),
+#                           't': list_all_bases.count('T'),
+#                           'a': list_all_bases.count('A'),
+#                           'c_proportion': list_all_bases.count('C') / len_list_all_bases,
+#                           'g_proportion': list_all_bases.count('G') / len_list_all_bases,
+#                           't_proportion': list_all_bases.count('T') / len_list_all_bases,
+#                           'a_proportion': list_all_bases.count('A') / len_list_all_bases}
+#         g_expected = dict_kmer_base['g_proportion'] * len_kmer
+#         c_expected = dict_kmer_base['c_proportion'] * len_kmer
+#         t_expected = dict_kmer_base['t_proportion'] * len_kmer
+#         a_expected = dict_kmer_base['a_proportion'] * len_kmer
+#         print("G expected by kmer (calculated from kmer) :", g_expected)
+#         print("C expected by kmer (calculated from kmer) :", c_expected)
+#         print("T expected by kmer (calculated from kmer) :", t_expected)
+#         print("A expected by kmer (calculated from kmer) :", a_expected)
+#     else:
+#         g_expected = c_expected = gc_percentage * len_kmer / 100 / 2
+#         t_expected = a_expected = (len_kmer - (g_expected + c_expected)) / 2
+#         print("G expected by kmer (from given value) :", g_expected)
+#         print("C expected by kmer (from given value) :", c_expected)
+#         print("T expected by kmer (from given value) :", t_expected)
+#         print("A expected by kmer (from given value) :", a_expected)
+#     #--- ECO MODE ---
+#     # if eco_mode: #memory economic calculation
+#     list_selected_kmer = []
+#     for kmer in list_kmer:
+#         g_obs = kmer.count('G')
+#         c_obs = kmer.count('C')
+#         t_obs = kmer.count('T')
+#         a_obs = kmer.count('A')
+#         #performe chi² test between numbers of bases inside kmer and expected number based on genome information provided
+#         chi = chisquare([g_obs, c_obs, t_obs, a_obs], f_exp=[g_expected, c_expected, t_expected, a_expected])
+#         if chi.pvalue > p_value: # take those who are dependent and do not respect H0 hypothesis
+#             list_selected_kmer.append(kmer)
+#     return list_selected_kmer
     # #---GREEDY MODE---
     # else: #memory greedy calculation with huge dict return
     #     dict_kmer_base = {}
@@ -205,19 +234,19 @@ def levenshtein_kmer_selection(list_kmer, gc_percentage=None, len_kmer=21, p_val
 #         return list_selected_kmer, list_unselected_kmer, dict_kmer_base
 
 
-def levenshtein_kmer_reselection(dict_kmer_base, list_kmer, p_value):
-    """
-    Function to reselect kmers with another p_value if necessary
-    :param dict_kmer_base: dictionary output of "levenshtein_kmer_selection" with eco_mode=False
-    :param list_kmer: list of kmers
-    :param p_value: float - threshold for rejection of H0 hypothesis (rejecting independence), higher value = less kmers selected
-    :return: list of selected kmers
-    """
-    list_selected_kmer = []
-    for kmer in list_kmer:
-        if dict_kmer_base[kmer]["chi"].pvalue > p_value:
-            list_selected_kmer.append(kmer)
-    return list_selected_kmer
+# def levenshtein_kmer_reselection(dict_kmer_base, list_kmer, p_value):
+#     """
+#     Function to reselect kmers with another p_value if necessary
+#     :param dict_kmer_base: dictionary output of "levenshtein_kmer_selection" with eco_mode=False
+#     :param list_kmer: list of kmers
+#     :param p_value: float - threshold for rejection of H0 hypothesis (rejecting independence), higher value = less kmers selected
+#     :return: list of selected kmers
+#     """
+#     list_selected_kmer = []
+#     for kmer in list_kmer:
+#         if dict_kmer_base[kmer]["chi"].pvalue > p_value:
+#             list_selected_kmer.append(kmer)
+#     return list_selected_kmer
 
 
 def network(values_dataframe, title=None, save=None, node_labeling=True, edge_labeling=True, show=True, node_size=800,
