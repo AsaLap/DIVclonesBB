@@ -1,8 +1,5 @@
 #!/bin/sh
-
 # Antoine Laporte 2025
-
-#!/bin/sh
 #SBATCH --job-name=KmerToLoadings
 #SBATCH -N 1
 #SBATCH -n 1
@@ -44,8 +41,9 @@ base_name=$(basename "${matrix}")
 name=${base_name%%.*}
 directory_output=${scripts_dir}/${name}_tmp
 
-#making output directory
+#making output directories
 mkdir -p "${directory_output}"
+mkdir -p "${base_dir}"/logs
 
 printf "\n------SPLIT------\n"
 #Counting number of lines to prepare the split

@@ -1,4 +1,5 @@
 #!/bin/sh
+# Antoine Laporte 2025
 #SBATCH --job-name=pca
 #SBATCH -N 1
 #SBATCH -n 1

@@ -8,7 +8,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import re
-import seaborn as sns
+# import seaborn as sns
 import sys
 from matplotlib import patches
 from scipy.stats import chisquare
