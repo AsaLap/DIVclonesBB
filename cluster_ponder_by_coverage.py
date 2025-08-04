@@ -8,13 +8,9 @@ import pandas as pd
 
 parser = argparse.ArgumentParser(description='Ponder kmer count by coverage')
 parser.add_argument('--matrix', action="store", dest='matrix', required=True, help="Matrix of kmer frequencies, TSV file")
-#Data/Chenin_matrix_test.tsv
 parser.add_argument('--names', action="store", dest='names', required=True, help="Names of lines in same order as they are in the matrix, each name on a new line type file")
-#Data/list_chenins_matrix.lst
-parser.add_argument('--coverage', action="store", dest='coverage', required=True, help="Mean coverage value for each line with 'Line' and 'Coverage' headers, TSV file")
-#Data/reads_count_coverage_chenins_with_pacbio.tsv
+parser.add_argument('--reads_count', action="store", dest='reads_count', required=True, help="Reads count value for each line (reverse and forward) with 'line_fr' and 'nb_reads' headers, TSV file")
 parser.add_argument('--round', action="store", dest='round', default=2, help="Rounding number of the matrix")
-#parser.add_argument('--remove_under_one', action='store_true', default=False, help='Remove kmer if value is <1 after pondering by coverage. Remove all lines with NaN kmer (=not shared by every line)')
 
 args = parser.parse_args()
 
@@ -29,7 +25,7 @@ with open(args.names, 'r') as f:
 matrix.columns = noms_colonnes
 
 # --- 4. Import coverage values dataframe
-nb_reads = pd.read_csv(args.coverage, sep='\t')
+nb_reads = pd.read_csv(args.reads_count, sep='\t')
 nb_reads['line'] =  nb_reads['line_fr'].apply(lambda x:  str(x).split("_R")[0]) # getting line names only
 nb_reads = nb_reads.groupby('line').sum() # suming all lines to get R1 and R2 on the same line, line is now index
 nb_reads["coverage"] = nb_reads["nb_reads"] * 150 / 500000000 # applying nb reads * 150 (size of a read) / 500 000 000 (size of genome)

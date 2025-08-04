@@ -23,6 +23,10 @@ scripts_dir=$(pwd)
 . "$scripts_dir"/run_parameters.config
 
 printf "\Parameters:\n"
+echo "do_splitting: $do_splitting"
+echo "do_pondering: $do_pondering"
+echo "do_levenshtein: $do_levenshtein"
+echo "do_pca: $do_pca"
 echo "matrix: $matrix"
 echo "split_factor: $split_factor"
 echo "reads_count: $reads_count"
@@ -48,56 +52,67 @@ logs_directory=${scripts_dir}/logs
 mkdir -p "${directory_output}"
 #mkdir -p "${logs_directory}"
 
-printf "\n------SPLIT------\n"
-#Counting number of lines to prepare the split
-nb_lines=$(wc -l "$matrix" | awk '{ print $1 }')
-lines=$((nb_lines / split_factor + 1)) #+1 top avoid having a file with the rest of the euclidean division
+if $do_splitting;then
+  printf "\n------SPLIT------\n"
+  #Counting number of lines to prepare the split
+  nb_lines=$(wc -l "$matrix" | awk '{ print $1 }')
+  lines=$((nb_lines / split_factor + 1)) #+1 top avoid having a file with the rest of the euclidean division
 
-echo "Original file contains $nb_lines lines"
-echo "Splitting in $split_factor by files of $lines lines..."
-START_TIME=$(date +%s)
-split "$matrix" "${directory_output}/${name}" -l $lines -d --additional-suffix .tsv
+  echo "Original file contains $nb_lines lines"
+  echo "Splitting in $split_factor by files of $lines lines..."
+  START_TIME=$(date +%s)
+  split "$matrix" "${directory_output}/${name}" -l $lines -d --additional-suffix .tsv
 
-ELAPSED=$(($(date +%s) - START_TIME))
-echo "...splitting done!"
-printf "Splitting time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
+  ELAPSED=$(($(date +%s) - START_TIME))
+  echo "...splitting done!"
+  printf "Splitting time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
+else
+  printf "\nSkipping splitting\n"
+fi
 
-printf "\n------PONDER------\n"
-echo "Pondering each submatrix by coverage values..."
-START_TIME=$(date +%s)
-for file in "$directory_output"/*;
-do
-  echo "$file"
-  sbatch "$scripts_dir"/launch_ponder.sh \
-  "$scripts_dir" \
-  "$file" \
-  "$names" \
-  "$reads_count" \
-  "$round";
-done
-ELAPSED=$(($(date +%s) - START_TIME))
-echo "...pondering done!"
-printf "Pondering time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
+if $do_pondering;then
+  printf "\n------PONDER------\n"
+  echo "Pondering each submatrix by coverage values..."
+  START_TIME=$(date +%s)
+  for file in "$directory_output"/*;
+  do
+    echo "$file"
+    sbatch "$scripts_dir"/launch_ponder.sh \
+    "$scripts_dir" \
+    "$file" \
+    "$names" \
+    "$reads_count" \
+    "$round";
+  done
+  ELAPSED=$(($(date +%s) - START_TIME))
+  echo "...pondering done!"
+  printf "Pondering time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
+else
+  printf "\nSkipping pondering\n"
+fi
 
-
-printf "\n------LEVENSHTEIN------\n"
-echo "Selecting kmer with Levenshtein process for each submatrix..."
-START_TIME=$(date +%s)
-for file in "$directory_output"/*pondered.tsv;
-do
-  echo "$file";
-  sbatch "$scripts_dir"/launch_levenshtein.sh \
-  "$scripts_dir" \
-  "$file" \
-  "$remove_specific" \
-  "$a_percentage" \
-  "$t_percentage" \
-  "$c_percentage" \
-  "$g_percentage" \
-  "$sep" \
-  "$len_kmer" \
-  "$p_value";
-done
-ELAPSED=$(($(date +%s) - START_TIME))
-echo "...Levenshtein selection done!"
-printf "Levenshtein time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
+if "$do_levenshtein";then
+  printf "\n------LEVENSHTEIN------\n"
+  echo "Selecting kmer with Levenshtein process for each submatrix..."
+  START_TIME=$(date +%s)
+  for file in "$directory_output"/*pondered.tsv;
+  do
+    echo "$file";
+    sbatch "$scripts_dir"/launch_levenshtein.sh \
+    "$scripts_dir" \
+    "$file" \
+    "$remove_specific" \
+    "$a_percentage" \
+    "$t_percentage" \
+    "$c_percentage" \
+    "$g_percentage" \
+    "$sep" \
+    "$len_kmer" \
+    "$p_value";
+  done
+  ELAPSED=$(($(date +%s) - START_TIME))
+  echo "...Levenshtein selection done!"
+  printf "Levenshtein time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
+else
+  printf "\nSkipping levenshtein\n"
+fi
