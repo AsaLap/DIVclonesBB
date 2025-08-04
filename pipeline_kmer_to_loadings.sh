@@ -2,10 +2,18 @@
 
 # Antoine Laporte 2025
 
-#usage="Usage: \nmandatory: <matrix file> <split factor> <read count file> <names>
-#optional: <scripts_dir, default=/storage/replicated/DIVclonesBB/02_scripts>"
+#!/bin/sh
+#SBATCH --job-name=KmerToLoadings
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH --mem=10000
+#SBATCH --ntasks-per-node=1
+#SBATCH --ntasks-per-core=1
+#SBATCH --account=divclinesbb
+#SBATCH --partition=divclonesbb
+#SBATCH -o slurm-%x.out
 
-#echo "Running on:$SLURM_NODELIST"
+echo "Running on:$SLURM_NODELIST"
 echo "Starting date: $(date +%d/%m/%y-%HH%M)"
 
 #module purge
@@ -15,7 +23,7 @@ echo "Starting date: $(date +%d/%m/%y-%HH%M)"
 scripts_dir=$(pwd)
 . "$scripts_dir"/run_parameters.config
 
-printf "\nArguments given:\n"
+printf "\Parameters:\n"
 echo "matrix: $matrix"
 echo "split_factor: $split_factor"
 echo "reads_count: $reads_count"
@@ -34,7 +42,7 @@ echo "p_value: $p_value"
 base_dir=$(dirname "$(realpath "$matrix")")
 base_name=$(basename "${matrix}")
 name=${base_name%%.*}
-directory_output=${base_dir}/${name}_tmp
+directory_output=${scripts_dir}/${name}_tmp
 
 #making output directory
 mkdir -p "${directory_output}"

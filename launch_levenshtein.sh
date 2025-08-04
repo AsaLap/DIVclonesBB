@@ -22,6 +22,10 @@ sep=$8
 len_kmer=$9
 p_value=${10}
 
+basename=$(basename "${matrix}")
+#SBATCH -o logs/slurm-"$basename".out
+echo "Running on:$SLURM_NODELIST"
+
 python "$scripts_dir"/cluster_levenshtein.py \
 --matrix "$matrix" \
 --remove_specific "$remove_specific" \

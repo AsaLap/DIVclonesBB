@@ -1,5 +1,5 @@
 #!/bin/sh
-#SBATCH --job-name=levenshtein
+#SBATCH --job-name=ponder
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH --mem=10000
@@ -16,6 +16,10 @@ matrix=$2
 names=$3
 reads_count=$4
 round=$5
+
+basename=$(basename "${matrix}")
+#SBATCH -o logs/slurm-"$basename".out
+echo "Running on:$SLURM_NODELIST"
 
 python "$scripts_dir"/cluster_ponder_by_coverage.py \
 --matrix "$matrix" \
