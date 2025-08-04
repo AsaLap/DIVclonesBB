@@ -8,6 +8,10 @@
 #SBATCH --ntasks-per-core=1
 #SBATCH --account=divclinesbb
 #SBATCH --partition=divclonesbb
+#SBATCH -o logs/levenshtein."%j".out
+#SBATCH -e logs/levenshtein."%j".err
+
+echo "Running on:$SLURM_NODELIST"
 
 module purge
 module load python/3.7.2
@@ -22,10 +26,6 @@ g_percentage=$7
 sep=$8
 len_kmer=$9
 p_value=${10}
-
-basename=$(basename "${matrix}")
-#SBATCH -o logs/slurm-"$basename".out
-echo "Running on:$SLURM_NODELIST"
 
 python "$scripts_dir"/cluster_levenshtein.py \
 --matrix "$matrix" \

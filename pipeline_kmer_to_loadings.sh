@@ -8,7 +8,8 @@
 #SBATCH --ntasks-per-core=1
 #SBATCH --account=divclinesbb
 #SBATCH --partition=divclonesbb
-#SBATCH -o slurm-%x.out
+#SBATCH -o logs/Kmer."%j".out
+#SBATCH -e logs/Kmer."%j".err
 
 echo "Running on:$SLURM_NODELIST"
 echo "Starting date: $(date +%d/%m/%y-%HH%M)"
@@ -36,19 +37,20 @@ echo "len_kmer: $len_kmer"
 echo "p_value: $p_value"
 
 #Prepare filenames and output_directory
-base_dir=$(dirname "$(realpath "$matrix")")
+#base_dir=$(dirname "$(realpath "$matrix")")
 base_name=$(basename "${matrix}")
 name=${base_name%%.*}
 directory_output=${scripts_dir}/${name}_tmp
+logs_directory=${scripts_dir}/logs
 
 #making output directories
 mkdir -p "${directory_output}"
-mkdir -p "${base_dir}"/logs
+#mkdir -p "${logs_directory}"
 
 printf "\n------SPLIT------\n"
 #Counting number of lines to prepare the split
 nb_lines=$(wc -l "$matrix" | awk '{ print $1 }')
-lines=$((nb_lines / $split_factor + 1)) #+1 top avoid having a file with the rest of the euclidean division
+lines=$((nb_lines / split_factor + 1)) #+1 top avoid having a file with the rest of the euclidean division
 
 echo "Original file contains $nb_lines lines"
 echo "Splitting in $split_factor by files of $lines lines..."
@@ -64,7 +66,7 @@ echo "Pondering each submatrix by coverage values..."
 START_TIME=$(date +%s)
 for file in "$directory_output"/*;
 do
-#  echo "$file"
+  echo "$file"
   sbatch "$scripts_dir"/launch_ponder.sh \
   "$file" \
   "$names" \
@@ -81,7 +83,7 @@ echo "Selecting kmer with Levenshtein process for each submatrix..."
 START_TIME=$(date +%s)
 for file in "$directory_output"/*pondered.tsv;
 do
-#  echo "$file";
+  echo "$file";
   sbatch "$scripts_dir"/launch_levenshtein.sh \
   "$scripts_dir" \
   "$file" \

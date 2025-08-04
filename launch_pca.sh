@@ -8,17 +8,16 @@
 #SBATCH --ntasks-per-core=1
 #SBATCH --account=divclinesbb
 #SBATCH --partition=divclonesbb
+#SBATCH -o logs/pca."%j".out
+#SBATCH -e logs/pca."%j".err
 
+echo "Running on:$SLURM_NODELIST"
 
 module purge
 module load python/3.7.2
 
 scripts_dir=$1
 matrix=$2
-
-basename=$(basename "${matrix}")
-#SBATCH -o logs/slurm-"$basename".out
-echo "Running on:$SLURM_NODELIST"
 
 python "$scripts_dir"/cluster_pca.py \
 --matrix "$matrix"

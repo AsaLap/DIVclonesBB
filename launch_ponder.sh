@@ -8,6 +8,10 @@
 #SBATCH --ntasks-per-core=1
 #SBATCH --account=divclinesbb
 #SBATCH --partition=divclonesbb
+#SBATCH -o logs/ponder."%j".out
+#SBATCH -e logs/ponder."%j".err
+
+echo "Running on:$SLURM_NODELIST"
 
 module purge
 module load python/3.7.2
@@ -18,9 +22,6 @@ names=$3
 reads_count=$4
 round=$5
 
-basename=$(basename "${matrix}")
-#SBATCH -o logs/slurm-"$basename".out
-echo "Running on:$SLURM_NODELIST"
 
 python "$scripts_dir"/cluster_ponder_by_coverage.py \
 --matrix "$matrix" \
