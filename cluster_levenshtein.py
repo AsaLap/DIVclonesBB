@@ -11,7 +11,10 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='Applying Levenshtein reduction on kmer matrix')
 parser.add_argument('--matrix', action="store", dest='matrix', required=True, type=str, help="Matrix of kmer frequencies, TSV file with first row as line names and kmer as index")
 parser.add_argument('--remove_specific', action='store', dest='remove_specific', type=bool, default=False, help="Remove specific kmer from matrix")
-parser.add_argument('--atcg_percentage', action="store", dest='atcg_percentage', type=float, default={"a":32.5, "t":32.5, "c":17.5, "g":17.5}, help="Percentages of A, T, C and G of the reference genome")
+parser.add_argument('--a_percentage', action="store", dest='a_percentage', type=float, default=32.5, help="Percentages of A, T, C and G of the reference genome")
+parser.add_argument('--t_percentage', action="store", dest='t_percentage', type=float, default=32.5, help="Percentages of A, T, C and G of the reference genome")
+parser.add_argument('--c_percentage', action="store", dest='c_percentage', type=float, default=17.5, help="Percentages of A, T, C and G of the reference genome")
+parser.add_argument('--g_percentage', action="store", dest='g_percentage', type=float, default=17.5, help="Percentages of A, T, C and G of the reference genome")
 parser.add_argument('--sep', action="store", dest='sep', type=str, default="\t", help="Separator between columns in matrix")
 parser.add_argument('--len_kmer', action="store", dest='len_kmer', type=int, default=21, help="Length of kmers")
 parser.add_argument('--p_value', action="store", dest='p_value', type=float, default=0.05, help="Threshold P-value to select kmers")
@@ -32,8 +35,12 @@ if args.remove_specific:
 
 # --- 3. Getting a list of kmer to keep, according to Levenshtein selection
 list_kmer = matrix.index.tolist()
+atcg_percentage = {"a": args.a_percentage,
+                   "t": args.t_percentage,
+                   "c": args.c_percentage,
+                   "g": args.g_percentage}
 list_selected_kmer = bioutils.levenshtein_select(list_kmer,
-                                                 atcg_per=args.gc_percentage,
+                                                 atcg_per=atcg_percentage,
                                                  len_kmer=args.len_kmer,
                                                  p_value=args.p_value)
 

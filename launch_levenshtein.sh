@@ -7,17 +7,28 @@
 #SBATCH --ntasks-per-core=1
 #SBATCH --account=divclinesbb
 #SBATCH --partition=divclonesbb
-#SBATCH -o slurm-%x.out
-
-echo "Running on:$SLURM_NODELIST"
 
 module purge
 module load python/3.7.2
 
 scripts_dir=$1
 matrix=$2
+remove_specific=$3
+a_percentage=$4
+t_percentage=$5
+c_percentage=$6
+g_percentage=$7
+sep=$8
+len_kmer=$9
+p_value=${10}
 
-python "$scripts_dir"/levenshtein_on_cluster.py \
+python "$scripts_dir"/cluster_levenshtein.py \
 --matrix "$matrix" \
-
-echo "Done"
+--remove_specific "$remove_specific" \
+--a_percentage "$a_percentage" \
+--t_percentage "$t_percentage" \
+--c_percentage "$c_percentage" \
+--g_percentage "$g_percentage" \
+--sep "$sep" \
+--len_kmer "$len_kmer" \
+--p_value "$p_value"

@@ -2,58 +2,33 @@
 
 # Antoine Laporte 2025
 
-
-usage="Usage: mandatory: <kmer count tsv file> <split factor> <read count file> <names>\n
-optional: <scripts_dir, default=/storage/replicated/DIVclonesBB/02_scripts>"
-
-if [ -n "$1" ]; then
-  echo "Matrix supplied: $1"
-else
-  echo "You need to supply the matrix as the first parameter!"
-  echo "$usage"
-  exit 1
-fi
-if [ -n "$2" ]; then
-  echo "Split factor: $2"
-else
-  echo "You need to supply the split factor as the second parameter!"
-  echo "$usage"
-  exit 1
-fi
-if [ -n "$3" ]; then
-  echo "Reads count supplied: $3"
-else
-  echo "You need to supply the reads count file as the third parameter!"
-  echo "$usage"
-  exit 1
-fi
-if [ -n "$4" ]; then
-  echo "Names supplied: $4"
-else
-  echo "You need to supply the list of names as the fourth parameter!"
-  echo "$usage"
-  exit 1
-fi
+#usage="Usage: \nmandatory: <matrix file> <split factor> <read count file> <names>
+#optional: <scripts_dir, default=/storage/replicated/DIVclonesBB/02_scripts>"
 
 #echo "Running on:$SLURM_NODELIST"
-#
+echo "Starting date: $(date +%d/%m/%y-%HH%M)"
+
 #module purge
 #module load python/3.7.2
 
-echo "Starting date: $(date)"
+# Loading parameters from config file
+scripts_dir=$(pwd)
+. "$scripts_dir"/run_parameters.config
 
-matrix=$1
-split_factor=$2
-reads_count=$3
-list_names=$4
-scripts_dir=${5:-"/storage/replicated/DIVclonesBB/02_scripts"}
-ARG6=${6:-$(date)}
-
-echo "Optional arguments:"
-echo "$scripts_dir"
-echo "$ARG6"
-#echo "$ARG3"
-#echo "$ARG4"
+printf "\nArguments given:\n"
+echo "matrix: $matrix"
+echo "split_factor: $split_factor"
+echo "reads_count: $reads_count"
+echo "names: $names"
+#echo "sep: $sep"
+echo "round: $round"
+echo "remove_specific: $remove_specific"
+echo "a_percentage: $a_percentage"
+echo "t_percentage: $t_percentage"
+echo "c_percentage: $c_percentage"
+echo "g_percentage: $g_percentage"
+echo "len_kmer: $len_kmer"
+echo "p_value: $p_value"
 
 #Prepare filenames and output_directory
 base_dir=$(dirname "$(realpath "$matrix")")
@@ -64,40 +39,55 @@ directory_output=${base_dir}/${name}_tmp
 #making output directory
 mkdir -p "${directory_output}"
 
-printf "\n------SPLIT------"
+printf "\n------SPLIT------\n"
 #Counting number of lines to prepare the split
 nb_lines=$(wc -l "$matrix" | awk '{ print $1 }')
-lines=$((nb_lines / $2 + 1)) #+1 top avoid having a file with the rest of the euclidean division
+lines=$((nb_lines / $split_factor + 1)) #+1 top avoid having a file with the rest of the euclidean division
 
 echo "Original file contains $nb_lines lines"
-echo "Splitting in $split_factor by files of $lines lines"
-#spliting file in wished number of files of equal size (except last one due to entire division)
+echo "Splitting in $split_factor by files of $lines lines..."
 START_TIME=$(date +%s)
-split $matrix "${directory_output}/${name}" -l $lines -d --additional-suffix .tsv
+split "$matrix" "${directory_output}/${name}" -l $lines -d --additional-suffix .tsv
 
 ELAPSED=$(($(date +%s) - START_TIME))
+echo "...splitting done!"
 printf "Splitting time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
-printf "------SPLIT------\n"
 
-printf "\n------PONDER------"
+printf "\n------PONDER------\n"
+echo "Pondering each submatrix by coverage values..."
+START_TIME=$(date +%s)
 for file in "$directory_output"/*;
 do
-  echo "$file"
+#  echo "$file"
   sbatch "$scripts_dir"/launch_ponder.sh \
   "$file" \
   "$names" \
-  "$reads_count";
+  "$reads_count" \
+  "$round";
 done
-printf "------PONDER-END------\n"
+ELAPSED=$(($(date +%s) - START_TIME))
+echo "...pondering done!"
+printf "Pondering time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
 
-printf "------LEVENSHTEIN------"
+
+printf "\n------LEVENSHTEIN------\n"
+echo "Selecting kmer with Levenshtein process for each submatrix..."
+START_TIME=$(date +%s)
 for file in "$directory_output"/*pondered.tsv;
 do
-  echo "$file"
+#  echo "$file";
   sbatch "$scripts_dir"/launch_levenshtein.sh \
   "$scripts_dir" \
-  "$file"
+  "$file" \
   "$remove_specific" \
-  "$p_value" \
-  ;
+  "$a_percentage" \
+  "$t_percentage" \
+  "$c_percentage" \
+  "$g_percentage" \
+  "$sep" \
+  "$len_kmer" \
+  "$p_value";
 done
+ELAPSED=$(($(date +%s) - START_TIME))
+echo "...Levenshtein selection done!"
+printf "Levenshtein time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
