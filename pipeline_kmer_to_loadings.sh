@@ -22,7 +22,7 @@ echo "Starting date: $(date +%d/%m/%y-%HH%M)"
 scripts_dir=$(pwd)
 . "$scripts_dir"/run_parameters.config
 
-printf "\Parameters:\n"
+printf "\nParameters:\n"
 echo "do_splitting: $do_splitting"
 echo "do_pondering: $do_pondering"
 echo "do_levenshtein: $do_levenshtein"
