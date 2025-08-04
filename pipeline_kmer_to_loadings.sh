@@ -8,6 +8,7 @@
 #SBATCH --ntasks-per-core=1
 #SBATCH --account=divclinesbb
 #SBATCH --partition=divclonesbb
+mkdir logs
 #SBATCH -o logs/Kmer."%j".out
 #SBATCH -e logs/Kmer."%j".err
 
@@ -68,6 +69,7 @@ for file in "$directory_output"/*;
 do
   echo "$file"
   sbatch "$scripts_dir"/launch_ponder.sh \
+  "$scripts_dir" \
   "$file" \
   "$names" \
   "$reads_count" \
