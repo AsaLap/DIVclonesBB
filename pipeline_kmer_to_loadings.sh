@@ -61,7 +61,7 @@ if $do_splitting;then
   echo "Original file contains $nb_lines lines"
   echo "Splitting in $split_factor by files of $lines lines..."
   START_TIME=$(date +%s)
-  split "$matrix" "${directory_output}/${name}" -l $lines -d --additional-suffix .tsv
+  split "$matrix" "${directory_output}/${name}_" -l $lines -d --additional-suffix .tsv
 
   ELAPSED=$(($(date +%s) - START_TIME))
   echo "...splitting done!"
