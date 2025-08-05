@@ -22,6 +22,8 @@ names=$3
 reads_count=$4
 round=$5
 
+echo "$matrix"
+
 python "$scripts_dir"/cluster_ponder_by_coverage.py \
 --matrix "$matrix" \
 --names "$names" \

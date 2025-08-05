@@ -3,7 +3,7 @@
 #SBATCH --job-name=levenshtein
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH --mem=10000
+#SBATCH --mem=20000
 #SBATCH --ntasks-per-node=1
 #SBATCH --ntasks-per-core=1
 #SBATCH --account=divclinesbb
@@ -26,6 +26,8 @@ g_percentage=$7
 sep=$8
 len_kmer=$9
 p_value=${10}
+
+echo "$matrix"
 
 python "$scripts_dir"/cluster_levenshtein.py \
 --matrix "$matrix" \
