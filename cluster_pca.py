@@ -6,8 +6,6 @@
 import bioutils
 
 import argparse
-import numpy as np
-import os
 import pandas as pd
 
 parser = argparse.ArgumentParser(description='PCA on kmer matrices')
