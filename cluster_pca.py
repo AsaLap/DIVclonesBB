@@ -22,7 +22,7 @@ n_loadings = int(args.n_loadings)
 ###------END------###
 
 ###------COMPUTING PCA------###
-df_pca, data_pca = bioutils.pca_computing(matrix, n_components=args.n_components)
+df_pca, data_pca = bioutils.pca_computing(matrix, n_components=n_components)
 ###------END------###
 
 ###------GET LOADINGS VALUES------###
