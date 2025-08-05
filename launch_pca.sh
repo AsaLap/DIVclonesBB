@@ -3,7 +3,7 @@
 #SBATCH --job-name=pca
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH --mem=100000
+#SBATCH --mem=10000
 #SBATCH --ntasks-per-node=1
 #SBATCH --ntasks-per-core=1
 #SBATCH --account=divclinesbb
