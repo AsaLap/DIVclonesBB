@@ -27,6 +27,7 @@ echo "do_splitting: $do_splitting"
 echo "do_pondering: $do_pondering"
 echo "do_levenshtein: $do_levenshtein"
 echo "do_pca: $do_pca"
+echo "do_concat: $do_concat"
 echo "matrix: $matrix"
 echo "split_factor: $split_factor"
 echo "reads_count: $reads_count"
@@ -55,10 +56,10 @@ mkdir -p "${directory_output}"
 if $do_splitting;then
   printf "\n------SPLIT------\n"
   #Counting number of lines to prepare the split
-  nb_lines=$(wc -l "$matrix" | awk '{ print $1 }')
-  lines=$((nb_lines / split_factor + 1)) #+1 top avoid having a file with the rest of the euclidean division
+  nb_kmer=$(wc -l "$matrix" | awk '{ print $1 }')
+  lines=$((nb_kmer / split_factor + 1)) #+1 top avoid having a file with the rest of the euclidean division
 
-  echo "Original file contains $nb_lines lines"
+  echo "Original file contains $nb_kmer lines"
   echo "Splitting in $split_factor by files of $lines lines..."
   START_TIME=$(date +%s)
   split "$matrix" "${directory_output}/${name}_" -l $lines -d --additional-suffix .tsv
@@ -69,6 +70,16 @@ if $do_splitting;then
 else
   printf "\nSkipping splitting\n"
 fi
+
+# Estimating mermory use?: 8 (bytes per float) * nb columns (=individuals) * nb lines (=kmer or line by matrix)
+# Example for 1/1000 matrix PN : 8 * 610 * 561404 = 2739651520 = 2.7GB
+# To matrix will be present in the python file so previous result * 2 : 5.4GB
+# But first matrix is int and not float so 4 bytes per int instead of 8 bytes per float.
+# We can truncate memory need as first matrix needs half the memory of the second: (2.7/2 = 1.35) so 2.7 + 1.35 = 4.05.
+# Let's put 5GB, which is first matrix * 2, truncated.
+# Ex : chardonnay with roughly 400MB files needed 10GB.
+nb_individuals=$(wc -l "$names" | awk '{ print $1 }')
+memory_estimation=$((8 * nb_individuals * nb_kmer * 2))
 
 if $do_pondering;then
   printf "\n------PONDER------\n"
@@ -115,4 +126,29 @@ if "$do_levenshtein";then
   printf "Levenshtein time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
 else
   printf "\nSkipping levenshtein\n"
+fi
+
+if "$do_pca";then
+  printf "\n------PCA------\n"
+  echo "Selecting pca loadings for each submatrix..."
+  START_TIME=$(date +%s)
+  for file in "$directory_output"/*pondered_levenshtein.tsv;
+  do
+    echo "$file";
+    sbatch "$scripts_dir"/launch_pca.sh \
+    "$scripts_dir" \
+    "$file" \
+    "$n_components" \
+    "$n_loadings" \
+    "$draw_graphs"
+  done
+  ELAPSED=$(($(date +%s) - START_TIME))
+  echo "...PCA loadings selection done!"
+  printf "PCA time: %s\n\n" "$(date -d@$ELAPSED -u +%H\ hours\ %M\ min\ %S\ sec)"
+else
+  printf "\nSkipping PCA\n"
+fi
+
+if "$do_concat";then
+  tail -q -n +2 "$directory_output"/*loadings* >> "$directory_output/${name}_pca_loadings_selection.tsv"
 fi
