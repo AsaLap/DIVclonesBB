@@ -27,7 +27,6 @@ matrix.columns = noms_colonnes
 # --- 4. Import coverage values dataframe
 nb_reads = pd.read_csv(args.reads_count, sep='\t')
 nb_reads.columns=[['line_fr', 'nb_reads']]
-nb_reads = nb_reads[['nb_reads']]
 nb_reads['line'] =  nb_reads['line_fr'].apply(lambda x:  str(x).split("_R")[0]) # getting line names only
 nb_reads = nb_reads.groupby('line').sum() # suming all lines to get R1 and R2 on the same line, line is now index
 nb_reads["coverage"] = nb_reads["nb_reads"] * 150 / 500000000 # applying nb reads * 150 (size of a read) / 500 000 000 (size of genome)
