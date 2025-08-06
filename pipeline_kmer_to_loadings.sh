@@ -155,6 +155,6 @@ else
 fi
 
 if "$do_concat";then
-  tail -q -n +2 "$directory_output"/*"$n_loadings"_pca_loadings_"$n_components"_components.tsv >> "$directory_output/${name}_pca_loadings_selection.tsv"
+  tail -q -n +2 "$directory_output"/*"$n_loadings"_pca_loadings_"$n_components"_components.tsv >> "$directory_output"/"$name"_"$n_loadings"_pca_loadings_"$n_components"_components.tsv
 #  str(n_loadings) + "_pca_loadings_" + str(n_components) + "_components.tsv"
 fi
