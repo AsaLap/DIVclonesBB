@@ -8,7 +8,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import re
-# import seaborn as sns
+import seaborn as sns
 from matplotlib import patches
 from scipy.stats import chisquare
 from scipy.cluster.hierarchy import dendrogram, linkage
@@ -18,7 +18,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 
-def clustering(data, title=None, save=None, show=True, hue=None, figsize=(10,5), dpi=150, method="ward", metric="euclidean"):
+def clustering(data, title=None, save=None, show=True, hue=None, hue_legend=None, figsize=(10,5), dpi=150, method="ward", metric="euclidean"):
     """
     Function to do and draw a clustering of lines
     :param data: pandas DataFrame, transposed dataframe with values to cluster
@@ -46,16 +46,33 @@ def clustering(data, title=None, save=None, show=True, hue=None, figsize=(10,5),
         for key in hue[0]:
             data_key = patches.Patch(color=hue[0][key], label=key)
             patchList.append(data_key)
-        plt.legend(handles=patchList)
+        plt.legend(handles=patchList, title=hue_legend)
     if save:
-        plt.savefig(save+".png", dpi=dpi)
+        plt.savefig(save+".png", dpi=dpi, bbox_inches='tight')
     if show:
         plt.show()
 
 
-def extraire_groupe_chenin(nom):
-    match = re.match(r".*CHENIN(.*)$", nom)
-    return match.group(1) if match else nom
+def extract_domaine(name):
+    first_split = name.split("_")
+    second_split = first_split[-1].split("-")
+    if len(second_split) == 1 or len(second_split) == 2:
+        return 'Clone'
+    else:
+        return second_split[0]
+
+
+def extract_row(name):
+    return name.split("_")[-2]
+
+
+def extraire_groupe_chenin(name):
+    """Function to extract group from which Chenin comes from. Function by Gautier Sarah
+    :param name: str - name of a chenin
+    :return: str - name of the group found
+    """
+    match = re.match(r".*CHENIN(.*)$", name)
+    return match.group(1) if match else name
     # Changing pacbio chenin which doesn't go in the correct group
     # groupes = chenin_1_percent_pondered.index.to_series().apply(extraire_groupe) # .replace("BPacBio", "B")
 
@@ -389,7 +406,7 @@ def pca_loadings_selection(pca_data, index, nb_loadings=50):
 
 
 def pca_scatterplot_seaborn(df_pca, pca_pipeline, save=None, title=None, hue_legend=None, show=True, axes=("PC1", "PC2"),
-                            figsize=(10, 7), dpi=150, **kwargs):
+                            figsize=(10, 7), dpi=150, text_label=True, **kwargs):
     """
     Function to draw a PCA scatterplot using seaborn scatterplot.
     :param df_pca: pandas dataframe containing PCA data
@@ -401,6 +418,7 @@ def pca_scatterplot_seaborn(df_pca, pca_pipeline, save=None, title=None, hue_leg
     :param axes: tuple of PCA axes = ("PC1","PC2")
     :param figsize: list of tuple = (10,7)
     :param dpi: int - quality of image to save
+    :param text_label: str - show labels or not on the plot
     :param kwargs: parameters of seaborn.scatterplot
     :return: array of PCA explained variance
     """
@@ -408,8 +426,9 @@ def pca_scatterplot_seaborn(df_pca, pca_pipeline, save=None, title=None, hue_leg
     plt.figure(figsize=figsize)
     sns.scatterplot(data=df_pca, x=axes[0], y=axes[1], **kwargs)
 
-    for i, row in df_pca.iterrows():
-        plt.text(row[axes[0]] + 0.2, row[axes[1]], i, fontsize=8)
+    if text_label:
+        for i, row in df_pca.iterrows():
+            plt.text(row[axes[0]] + 0.2, row[axes[1]], i, fontsize=8)
     plt.xlabel(
         f"{axes[0]} ({pca_pipeline[1].explained_variance_ratio_[int(axes[0][2]) - 1] * 100:.1f} %)")  # pca_pipeline[1] = pca
     plt.ylabel(
