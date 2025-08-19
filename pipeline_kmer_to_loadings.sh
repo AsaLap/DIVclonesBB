@@ -74,13 +74,13 @@ else
   printf "\nSkipping splitting\n"
 fi
 
-# Estimating mermory use?: 8 (bytes per float) * nb columns (=individuals) * nb lines (=kmer or line by matrix)
+# Estimating memory use?: 8 (bytes per float) * nb columns (=individuals) * nb lines (=kmer or line by matrix)
 # Example for 1/1000 matrix PN : 8 * 610 * 561404 = 2739651520 = 2.7GB
 # Two matrix will be loaded/created in the python file so previous result * 2 : 5.4GB
 # But first matrix is int and not float so 4 bytes per int instead of 8 bytes per float.
 # We can truncate memory need as first matrix needs half the memory of the second: (2.7/2 = 1.35) so 2.7 + 1.35 = 4.05.
 # Let's put 5GB, which is first matrix * 2, truncated.
-# Ex : chardonnay with roughly 400MB files needed 10GB.
+# But this calculs seems not sufficient : Ex : chardonnay with roughly 400MB files needed 10GB...
 nb_individuals=$(wc -l "$names" | awk '{ print $1 }')
 memory_estimation=$((8 * nb_individuals * nb_kmer * 2))
 echo "Individuals: $nb_individuals"
