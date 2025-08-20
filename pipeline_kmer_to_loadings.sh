@@ -6,8 +6,7 @@
 #SBATCH --mem=10000
 #SBATCH --ntasks-per-node=1
 #SBATCH --ntasks-per-core=1
-#SBATCH --account=divclinesbb
-#SBATCH --partition=divclonesbb
+#SBATCH --partition=cpu
 mkdir logs
 #SBATCH -o logs/Kmer."%j".out
 #SBATCH -e logs/Kmer."%j".err

@@ -6,8 +6,7 @@
 #SBATCH --mem=20000
 #SBATCH --ntasks-per-node=1
 #SBATCH --ntasks-per-core=1
-#SBATCH --account=divclinesbb
-#SBATCH --partition=divclonesbb
+#SBATCH --partition=cpu
 #SBATCH -o logs/levenshtein."%j".out
 #SBATCH -e logs/levenshtein."%j".err
 
