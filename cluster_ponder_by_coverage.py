@@ -15,7 +15,7 @@ parser.add_argument('--round', action="store", dest='round', default=2, help="Ro
 args = parser.parse_args()
 
 # --- 1. Loading data
-matrix = pd.read_csv(args.matrix, sep='\t', header=None, index_col=0)
+matrix = pd.read_csv(args.matrix, sep='\t', header=None, index_col=0, engine='python')
 
 # --- 2. Charger les noms de colonnes à partir du fichier texte
 with open(args.names, 'r') as f:

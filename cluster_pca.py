@@ -16,7 +16,7 @@ parser.add_argument('--n_loadings', action="store", dest='n_loadings', default=5
 args = parser.parse_args()
 
 ###------LOADING DATA------###
-matrix = pd.read_csv(args.matrix, sep='\t', header=0, index_col=0)
+matrix = pd.read_csv(args.matrix, sep='\t', header=0, index_col=0, engine='python')
 n_components = int(args.n_components)
 n_loadings = int(args.n_loadings)
 ###------END------###

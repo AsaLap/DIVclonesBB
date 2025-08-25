@@ -27,7 +27,7 @@ print("Matrix : ", args.matrix)
 print("Specific removed : ", args.remove_specific)
 
 # --- 1. Loading data
-matrix = pd.read_csv(args.matrix, sep=args.sep, header=0, index_col=0)
+matrix = pd.read_csv(args.matrix, sep=args.sep, header=0, index_col=0, engine='python')
 
 # --- 2. Removing line-specific kmers
 if args.remove_specific:
